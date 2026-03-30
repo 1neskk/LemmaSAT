@@ -1,7 +1,6 @@
 #pragma once
 
 #include "clause_database.h"
-#include "logger.h"
 #include "parser.h"
 #include "proof_emitter.h"
 

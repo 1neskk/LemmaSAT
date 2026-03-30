@@ -7,6 +7,8 @@ This is a SAT solver that uses the CDCL algorithm to solve the Boolean Satisfiab
 - [To do](#to-do)
 - [Building](#building)
 - [Running](#running)
+- [References](#references)
+- [LICENSE](#license)
 - [Contributing](#contributing)
 
 ## To do
@@ -29,6 +31,17 @@ cmake --build build --config Release
 ```bash
 ./build/Solver/SAT-solver <path_to_dimacs_file>
 ```
+
+## References
+
+- [Unit Propagation](https://en.wikipedia.org/wiki/Unit_propagation)
+- [CDCL](https://en.wikipedia.org/wiki/Conflict-driven_clause_learning)
+- [Impact of BVE on Solving Pigeonhole Formulas](https://www.cs.cmu.edu/~mheule/publications/bve-paper.pdf)
+- [Preprocessing in SAT Solving](https://cca.informatik.uni-freiburg.de/papers/BiereJarvisaloKiesl-SAT-Handbook-2021-Preprocessing-Chapter-Manuscript.pdf)
+
+## LICENSE
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 
