@@ -41,9 +41,9 @@ bool Preprocessor::Preprocess(const Config& config) {
   LOG_INFO(
       "Preprocessing done: {} units, {} pure, {} subsumed, {} strengthened, "
       "{} vars eliminated, {} probing units, {} blocked",
-      stats_.units_propagated, stats_.pure_eliminated,
-      stats_.clauses_subsumed, stats_.literals_strengthened,
-      stats_.vars_eliminated, stats_.probing_units, stats_.blocked_clauses);
+      stats_.units_propagated, stats_.pure_eliminated, stats_.clauses_subsumed,
+      stats_.literals_strengthened, stats_.vars_eliminated,
+      stats_.probing_units, stats_.blocked_clauses);
 
   return true;
 }
@@ -171,7 +171,7 @@ bool Preprocessor::Subsume(uint32_t ci) {
     }
   }
 
-  // Forward subsumption: C \subseteq D -> delete D 
+  // Forward subsumption: C \subseteq D -> delete D
   for (uint32_t di : db_.Occurrences(best_lit)) {
     if (di == ci || db_[di].deleted) continue;
     if (IsSubset(clause, db_[di])) {
@@ -301,8 +301,7 @@ bool Preprocessor::TryEliminate(int32_t var) {
   }
 
   // Cost guard: reject if net clause count would grow.
-  int32_t growth =
-      static_cast<int32_t>(resolvents.size()) - original_count;
+  int32_t growth = static_cast<int32_t>(resolvents.size()) - original_count;
   if (growth > config_.bve_max_growth) return true;
 
   EliminationRecord rec;
@@ -478,8 +477,7 @@ bool Preprocessor::Probe() {
   return true;
 }
 
-bool Preprocessor::IsBlocked(uint32_t clause_idx,
-                             int32_t blocking_lit) const {
+bool Preprocessor::IsBlocked(uint32_t clause_idx, int32_t blocking_lit) const {
   const auto& clause = db_[clause_idx];
 
   // A clause C is blocked on `blocking_lit` if every resolvent of C with

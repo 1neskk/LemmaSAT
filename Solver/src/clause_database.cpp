@@ -40,7 +40,7 @@ const std::vector<uint32_t>& ClauseDatabase::Occurrences(int32_t lit) const {
 void ClauseDatabase::CleanOccurrences(int32_t lit) {
   auto& occ = occ_[LitIndex(lit)];
   occ.erase(std::remove_if(occ.begin(), occ.end(),
-                            [this](uint32_t i) { return clauses_[i].deleted; }),
+                           [this](uint32_t i) { return clauses_[i].deleted; }),
             occ.end());
 }
 

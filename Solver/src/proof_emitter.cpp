@@ -26,13 +26,11 @@ void ProofEmitter::EmitLRATClause(uint64_t id, std::span<const int32_t> clause,
                                   std::span<const uint64_t> hints) {
   out_ << id << " ";
 
-  for (int32_t literal : clause)
-    out_ << literal << " ";
+  for (int32_t literal : clause) out_ << literal << " ";
 
   out_ << "0 ";
 
-  for (uint64_t hint : hints)
-    out_ << hint << " ";
+  for (uint64_t hint : hints) out_ << hint << " ";
 
   out_ << "0\n";
 }
@@ -41,12 +39,9 @@ void ProofEmitter::EmitLRATDelete(uint64_t id,
                                   std::span<const uint64_t> clause_ids) {
   out_ << id << " d ";
 
-  for (uint64_t clause_id : clause_ids)
-    out_ << clause_id << " ";
+  for (uint64_t clause_id : clause_ids) out_ << clause_id << " ";
 
   out_ << "0\n";
 }
 
-void ProofEmitter::Flush() {
-  out_.flush();
-}
+void ProofEmitter::Flush() { out_.flush(); }

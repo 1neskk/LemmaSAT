@@ -17,6 +17,7 @@ This is a SAT solver that uses the CDCL algorithm to solve the Boolean Satisfiab
 - [x] Preprocessing (BCP, Pure Literal Elimination, Subsumption & SSR, Strengthening, Blocked Clause Elimination, Variable Elimination, Probing)
 - [ ] CDCL Engine (Decision Heuristics, Conflict Analysis, Learning Clauses, Backtracking)
 - [x] Proof System (DRUP, LRAT and DRAT-proof)
+- [ ] Policy Layer ??
 - [ ] Parallelization / HPC [optional]
 
 ## Building

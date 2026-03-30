@@ -10,8 +10,6 @@ class Solver {
   explicit Solver(ClauseDatabase& db, ProofEmitter& emitter);
   ~Solver() = default;
 
-  void Solve();
-
  private:
   Parser& parser_;
   ProofEmitter& emitter_;

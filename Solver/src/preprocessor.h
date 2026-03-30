@@ -56,7 +56,6 @@ class Preprocessor {
   void ExtendModel(std::vector<int8_t>& model) const;
 
  private:
-
   enum class Value : uint8_t { kUndef = 0, kTrue, kFalse };
 
   [[nodiscard]] Value LitValue(int32_t lit) const;
@@ -83,8 +82,7 @@ class Preprocessor {
 
   ProbeResult ProbeLit(int32_t lit);
 
-  [[nodiscard]] bool IsBlocked(uint32_t clause_idx,
-                               int32_t blocking_lit) const;
+  [[nodiscard]] bool IsBlocked(uint32_t clause_idx, int32_t blocking_lit) const;
 
   ClauseDatabase& db_;
   ProofEmitter* proof_;

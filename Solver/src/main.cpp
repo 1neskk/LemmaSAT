@@ -30,6 +30,7 @@ int main(int argc, char** argv) {
   Preprocessor preprocessor(db);
   if (!preprocessor.Preprocess()) {
     LOG_INFO("UNSATISFIABLE (detected during preprocessing)");
+    std::cout << "UNSATISFIABLE\n";  // print to stdout for external tools
     return 0;
   }
 
