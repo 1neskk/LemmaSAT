@@ -1,0 +1,4 @@
+c (x_1 or ~x_2 or x_3) and (~x_1 or ~x_2 or ~x_3)
+p cnf 3 2
+1 -2 3 0
+-1 -2 -3 0
