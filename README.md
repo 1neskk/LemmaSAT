@@ -1,4 +1,4 @@
-# CDCL SAT Solver
+# LemmaSAT
 
 This is a SAT solver that uses the CDCL algorithm to solve the Boolean Satisfiability Problem on CNF formulas.
 
