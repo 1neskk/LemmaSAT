@@ -38,7 +38,8 @@ cmake --build build --config Release
 - [Unit Propagation](https://en.wikipedia.org/wiki/Unit_propagation)
 - [CDCL](https://en.wikipedia.org/wiki/Conflict-driven_clause_learning)
 - [Impact of BVE on Solving Pigeonhole Formulas](https://www.cs.cmu.edu/~mheule/publications/bve-paper.pdf)
-- [Preprocessing in SAT Solving](https://cca.informatik.uni-freiburg.de/papers/BiereJarvisaloKiesl-SAT-Handbook-2021-Preprocessing-Chapter-Manuscript.pdf)
+- [Preprocessing in SAT Solving](https://cca.informatik.uni-freiburg.de/papers/BiereJarvisaloKiesl-SAT-Handbook-2021-Preprocessing-Chapter-Manuscript.pdf) (if link is unreachable, DOI: 10.3233/FAIA200992)
+- [Kissat](https://github.com/arminbiere/kissat) and [CaDiCaL](https://github.com/arminbiere/cadical) source codes
 
 ## LICENSE
 
