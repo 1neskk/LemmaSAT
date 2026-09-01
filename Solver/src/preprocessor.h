@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <queue>
+#include <span>
 #include <vector>
 
 #include "clause_database.h"
@@ -41,7 +42,7 @@ class Preprocessor {
 
   Preprocessor(ClauseDatabase& db, ProofEmitter* proof = nullptr);
 
-  bool Preprocess(const Config& config = {});
+  bool Preprocess();
 
   bool Propagate();
   bool EliminatePureLiterals();
@@ -53,13 +54,29 @@ class Preprocessor {
   [[nodiscard]] const std::vector<int32_t>& Trail() const { return trail_; }
   [[nodiscard]] const Stats& GetStats() const { return stats_; }
 
+  [[nodiscard]] bool HasEmptyClause() const { return empty_clause_; }
+
   void ExtendModel(std::vector<int8_t>& model) const;
 
  private:
   enum class Value : uint8_t { kUndef = 0, kTrue, kFalse };
 
+  enum class ClauseStatus : uint8_t {
+    kSatisfied,
+    kFalsified,
+    kUnit,
+    kUnresolved
+  };
+
   [[nodiscard]] Value LitValue(int32_t lit) const;
   void SetValue(int32_t var, Value val);
+
+  [[nodiscard]] ClauseStatus Evaluate(const Clause& clause,
+                                      int32_t* unit_lit = nullptr) const;
+
+  bool DetectEmptyClause(uint32_t ci);
+  bool ScanForEmptyClause();
+  bool SignalEmptyClause(std::span<const int32_t> antecedent);
 
   bool Enqueue(int32_t lit);
   bool PropagateQueue();
@@ -92,6 +109,8 @@ class Preprocessor {
   std::vector<Value> assigns_;
   std::vector<int32_t> trail_;
   std::queue<int32_t> unit_queue_;
+
+  bool empty_clause_ = false;
 
   std::vector<bool> eliminated_;
 

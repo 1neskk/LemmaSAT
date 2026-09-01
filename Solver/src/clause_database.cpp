@@ -30,7 +30,11 @@ void ClauseDatabase::StrengthenClause(uint32_t idx, int32_t remove_lit) {
   clause.signature = ComputeSignature(lits);
 
   auto& occ = occ_[LitIndex(remove_lit)];
-  occ.erase(std::remove(occ.begin(), occ.end(), idx), occ.end());
+  auto it = std::find(occ.begin(), occ.end(), idx);
+  if (it != occ.end()) {
+    *it = occ.back();
+    occ.pop_back();
+  }
 }
 
 const std::vector<uint32_t>& ClauseDatabase::Occurrences(int32_t lit) const {

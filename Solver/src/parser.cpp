@@ -9,6 +9,8 @@
 Parser::Parser(std::string filename)
     : filename_(std::move(filename)), num_variables_(0), num_clauses_(0) {}
 
+// TODO: Support to multiple clauses per line
+
 void Parser::Parse() {
   std::ifstream file(filename_);
   std::string line;

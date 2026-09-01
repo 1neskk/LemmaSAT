@@ -11,7 +11,6 @@ class Solver {
   ~Solver() = default;
 
  private:
-  Parser& parser_;
   ProofEmitter& emitter_;
   ProofFormat format_;
 };

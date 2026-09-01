@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <string>
 
 #include "logger.h"
 
@@ -11,12 +12,11 @@ Preprocessor::Preprocessor(ClauseDatabase& db, ProofEmitter* proof)
       assigns_(static_cast<size_t>(db.NumVars() + 1), Value::kUndef),
       eliminated_(static_cast<size_t>(db.NumVars() + 1), false) {}
 
-bool Preprocessor::Preprocess(const Config& config) {
-  config_ = config;
-
+bool Preprocessor::Preprocess() {
   for (int32_t round = 0; round < config_.max_rounds; ++round) {
     Stats before = stats_;
 
+    if (HasEmptyClause()) return false;
     if (!Propagate()) return false;
     if (!EliminatePureLiterals()) return false;
 
@@ -62,13 +62,75 @@ bool Preprocessor::Enqueue(int32_t lit) {
   Value cur = LitValue(lit);
 
   if (cur == Value::kTrue) return true;
-  if (cur == Value::kFalse) return false;
+
+  if (cur == Value::kFalse) {
+    const int32_t conflicting[] = {lit};
+    return SignalEmptyClause(conflicting);
+  }
 
   SetValue(var, lit > 0 ? Value::kTrue : Value::kFalse);
   trail_.push_back(lit);
   unit_queue_.push(lit);
   ++stats_.units_propagated;
   return true;
+}
+
+Preprocessor::ClauseStatus Preprocessor::Evaluate(const Clause& clause,
+                                                  int32_t* unit_lit) const {
+  int32_t unassigned = 0;
+  int32_t last_free = 0;
+
+  for (int32_t lit : clause.literals) {
+    Value v = LitValue(lit);
+    if (v == Value::kTrue) return ClauseStatus::kSatisfied;
+    if (v == Value::kUndef) {
+      ++unassigned;
+      last_free = lit;
+    }
+  }
+
+  if (unassigned == 0) return ClauseStatus::kFalsified;
+
+  if (unassigned == 1) {
+    if (unit_lit != nullptr) *unit_lit = last_free;
+    return ClauseStatus::kUnit;
+  }
+  return ClauseStatus::kUnresolved;
+}
+
+bool Preprocessor::SignalEmptyClause(std::span<const int32_t> antecedent) {
+  if (!empty_clause_) {
+    empty_clause_ = true;
+
+    // The empty clause closes a DRUP/DRAT proof.
+    // NOTE: units derived by pure-literal elimination and probing are not
+    // emitted yet, so this line is only RUP-checkable once they are.
+    if (proof_) proof_->EmitClause(std::span<const int32_t>{});
+
+    std::string lits;
+    for (int32_t lit : antecedent) {
+      if (!lits.empty()) lits += ' ';
+      lits += std::to_string(lit);
+    }
+    LOG_INFO("Empty clause derived (falsified antecedent: [{}]) - UNSAT", lits);
+  }
+  return false;
+}
+
+bool Preprocessor::DetectEmptyClause(uint32_t ci) {
+  const Clause& clause = db_[ci];
+  if (clause.deleted) return false;
+  if (Evaluate(clause) != ClauseStatus::kFalsified) return false;
+
+  SignalEmptyClause(clause.literals);
+  return true;
+}
+
+bool Preprocessor::ScanForEmptyClause() {
+  for (uint32_t ci = 0; ci < db_.NumClauses(); ++ci) {
+    if (DetectEmptyClause(ci)) return true;
+  }
+  return false;
 }
 
 bool Preprocessor::PropagateQueue() {
@@ -85,7 +147,11 @@ bool Preprocessor::PropagateQueue() {
 
     // Clauses containing negated `lit` — strengthen by removing `-lit`.
     int32_t neg = -lit;
-    for (uint32_t ci : db_.Occurrences(neg)) {
+    const auto& occ = db_.Occurrences(neg);
+    // Iterate backwards: StrengthenClause removes `ci` from this very list
+    // by swapping in the back element, which we have already visited.
+    for (size_t i = occ.size(); i > 0; --i) {
+      uint32_t ci = occ[i - 1];
       if (db_[ci].deleted) continue;
 
       if (proof_) {
@@ -99,7 +165,7 @@ bool Preprocessor::PropagateQueue() {
 
       db_.StrengthenClause(ci, neg);
 
-      if (db_[ci].Empty()) return false;
+      if (DetectEmptyClause(ci)) return false;
 
       if (db_[ci].IsUnit()) {
         if (!Enqueue(db_[ci].literals[0])) return false;
@@ -110,6 +176,8 @@ bool Preprocessor::PropagateQueue() {
 }
 
 bool Preprocessor::Propagate() {
+  if (ScanForEmptyClause()) return false;
+
   for (uint32_t i = 0; i < db_.NumClauses(); ++i) {
     if (db_[i].deleted) continue;
     if (db_[i].IsUnit()) {
@@ -184,7 +252,9 @@ bool Preprocessor::Subsume(uint32_t ci) {
   // Self-subsuming resolution (SSR)
   for (int32_t lit : clause.literals) {
     int32_t neg = -lit;
-    for (uint32_t di : db_.Occurrences(neg)) {
+    auto& occ = db_.Occurrences(neg);
+    for (size_t i = occ.size(); i > 0; --i) {
+      uint32_t di = occ[i - 1];
       if (di == ci || db_[di].deleted) continue;
       if (db_[di].Size() < clause.Size()) continue;
 
@@ -218,7 +288,7 @@ bool Preprocessor::Subsume(uint32_t ci) {
         db_.StrengthenClause(di, neg);
         ++stats_.literals_strengthened;
 
-        if (db_[di].Empty()) return false;
+        if (DetectEmptyClause(di)) return false;
         if (db_[di].IsUnit()) {
           if (!Enqueue(db_[di].literals[0])) return false;
           if (!PropagateQueue()) return false;
@@ -330,7 +400,7 @@ bool Preprocessor::TryEliminate(int32_t var) {
   for (auto& resolvent : resolvents) {
     if (proof_) proof_->EmitClause(resolvent);
     uint32_t new_idx = db_.AddClause(std::move(resolvent));
-    if (db_[new_idx].Empty()) return false;
+    if (DetectEmptyClause(new_idx)) return false;
     if (db_[new_idx].IsUnit()) {
       if (!Enqueue(db_[new_idx].literals[0])) return false;
       if (!PropagateQueue()) return false;
@@ -381,36 +451,27 @@ Preprocessor::ProbeResult Preprocessor::ProbeLit(int32_t lit) {
     for (uint32_t ci : db_.Occurrences(-prop)) {
       if (db_[ci].deleted) continue;
 
-      int32_t unassigned_count = 0;
       int32_t unit_lit = 0;
-      bool satisfied = false;
+      // Same falsification test as DetectEmptyClause, but a falsified clause
+      // here only refutes the assumption `lit`, not the formula - so it must
+      // never be signalled as the empty clause.
+      switch (Evaluate(db_[ci], &unit_lit)) {
+        case ClauseStatus::kFalsified:
+          result.conflict = true;
+          trail_.resize(trail_save);
+          assigns_ = assigns_save;
+          return result;
 
-      for (int32_t l : db_[ci].literals) {
-        Value v = LitValue(l);
-        if (v == Value::kTrue) {
-          satisfied = true;
+        case ClauseStatus::kUnit:
+          SetValue(std::abs(unit_lit),
+                   unit_lit > 0 ? Value::kTrue : Value::kFalse);
+          trail_.push_back(unit_lit);
+          q.push(unit_lit);
           break;
-        }
-        if (v == Value::kUndef) {
-          ++unassigned_count;
-          unit_lit = l;
-        }
-      }
 
-      if (satisfied) continue;
-
-      if (unassigned_count == 0) {
-        result.conflict = true;
-        trail_.resize(trail_save);
-        assigns_ = assigns_save;
-        return result;
-      }
-
-      if (unassigned_count == 1 && LitValue(unit_lit) == Value::kUndef) {
-        SetValue(std::abs(unit_lit),
-                 unit_lit > 0 ? Value::kTrue : Value::kFalse);
-        trail_.push_back(unit_lit);
-        q.push(unit_lit);
+        case ClauseStatus::kSatisfied:
+        case ClauseStatus::kUnresolved:
+          break;
       }
     }
   }
