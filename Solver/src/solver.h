@@ -7,10 +7,10 @@
 // The CDCL engine
 class Solver {
  public:
-  explicit Solver(ClauseDatabase& db, ProofEmitter& emitter);
+  explicit Solver(ClauseDatabase& db);
   ~Solver() = default;
 
  private:
-  ProofEmitter& emitter_;
   ProofFormat format_;
+  ProofEmitter& emitter_;
 };
