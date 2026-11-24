@@ -19,7 +19,7 @@ relwithdebinfo:
 	mkdir -p build
 	@echo "Building project in RelWithDebInfo mode..."
 	cd build && \
-	cmake -DCMAKE_BUILD_TYPE=Relwithdebinfo .. && \
+	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .. && \
 	make
 
 clean:
