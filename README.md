@@ -23,14 +23,13 @@ This is a SAT solver that uses the CDCL algorithm to solve the Boolean Satisfiab
 ## Building
 
 ```bash
-cmake -B build -S .
-cmake --build build --config Release
+make build
 ```
 
 ## Running
 
 ```bash
-./build/Solver/SAT-solver <path_to_dimacs_file>
+./build/Solver/Solver <path_to_dimacs_file>
 ```
 
 ## References
